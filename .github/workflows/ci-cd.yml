@@ -1,0 +1,38 @@
+name: Build → Dev → Staging → Prod
+
+on:
+  push:
+    branches: [develop, main]
+  workflow_dispatch:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Docker Image
+        run: |
+          docker build -t $OCI_NS.ocir.io/wingspanai/cal:${{ github.sha }} .
+      - name: Push Docker Image
+        run: |
+          docker push $OCI_NS.ocir.io/wingspanai/cal:${{ github.sha }}
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    strategy:
+      matrix: { env: [dev, staging, prod] }
+    environment: ${{ matrix.env }}
+    if: |
+      (matrix.env == 'dev' && github.ref == 'refs/heads/develop') ||
+      (matrix.env == 'staging' && github.ref == 'refs/heads/main') ||
+      (matrix.env == 'prod' && startsWith(github.ref, 'refs/tags/'))
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Terraform Deploy
+        uses: oracle/oci-terraform@v1
+        with:
+          workspace: ${{ matrix.env }}
+          image_tag: ${{ github.sha }}
