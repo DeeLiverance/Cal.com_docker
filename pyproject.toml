@@ -1,0 +1,18 @@
+[tool.black]
+line-length = 88
+target-version = ['py39']
+include = '\.pyi?$'
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+include_trailing_comma = true
+line_length = 88
+
+[tool.flake8]
+max-line-length = 88
+extend-ignore = "E203"
+max-complexity = 18
+select = "B,C,E,F,W,B4,B9,BLK,C4,DTZ,EM,EXE,FA,FBT,G,I,SIM,S,UP,W6"
+extend-select = "B008,B027"
+per-file-ignores = "__init__.py: F401"
